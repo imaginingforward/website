@@ -1,53 +1,55 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset='utf-8' />
+  <meta charset="UTF-8" />
   <title>Imagining Forward NYC Events</title>
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 2rem; }
-    #calendar { max-width: 900px; margin: auto; }
+    body { font-family: sans-serif; padding: 2rem; background: #fafafa; }
+    #calendar { max-width: 900px; margin: auto; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
-  <h1>NYC Tech Events</h1>
-  <div id='calendar'></div>
+  <h1 style="text-align: center;">Imagining Forward: NYC Tech Events</h1>
+  <div id="calendar"></div>
 
   <script>
-    async function fetchSheetData() {
-      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0zSv1TJTeGz0I4iuJEyJafunZlFzq9ZAfwNDLJVH9rGBh06SP2CbCZAkazdsthWB8ey1jxm1EUB_M/pubhtml?gid=604141019&single=true';
-      const res = await fetch(url);
-      const text = await res.text();
-      const rows = text.split('\n').slice(5);
+    async function fetchEvents() {
+      const url = "https://script.google.com/macros/s/AKfycbwKPO6RTby9DGxWKf0wh2Rqm8fd0iqakrNHeki_Spvt5FxtUISM1EG7YrAhCABss7AZSg/exec"; // Replace with your own web app URL if different
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-      const events = rows.map(row => {
-        const cols = row.split(',');
-        return {
-          title: cols[1]?.trim(),
-          start: cols[2]?.trim() + 'T' + (cols[3]?.trim() || '09:00'),
-          url: cols[4]?.trim(),
-          allDay: false,
-        };
-      }).filter(e => e.start);
-
-      return events;
+        return data.map(event => ({
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          description: event.description || '',
+          location: event.location || '',
+          allDay: false
+        }));
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+        return [];
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async function () {
       const calendarEl = document.getElementById('calendar');
-      const events = await fetchSheetData();
+      const events = await fetchEvents();
 
       const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        events,
-        eventClick(info) {
-          if (info.event.url) {
-            window.open(info.event.url, '_blank');
-            info.jsEvent.preventDefault();
-          }
-        },
+        events: events,
+        eventClick: function(info) {
+          alert(
+            `${info.event.title}\n\n` +
+            `📍 Location: ${info.event.extendedProps.location}\n` +
+            `📝 Description: ${info.event.extendedProps.description || 'None'}`
+          );
+          info.jsEvent.preventDefault(); // Prevent default browser navigation
+        }
       });
 
       calendar.render();
