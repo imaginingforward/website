@@ -1,0 +1,57 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>Imagining Forward NYC Events</title>
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    #calendar { max-width: 900px; margin: auto; }
+  </style>
+</head>
+<body>
+  <h1>NYC Tech Events</h1>
+  <div id='calendar'></div>
+
+  <script>
+    async function fetchSheetData() {
+      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0zSv1TJTeGz0I4iuJEyJafunZlFzq9ZAfwNDLJVH9rGBh06SP2CbCZAkazdsthWB8ey1jxm1EUB_M/pubhtml?gid=604141019&single=true';
+      const res = await fetch(url);
+      const text = await res.text();
+      const rows = text.split('\n').slice(5);
+
+      const events = rows.map(row => {
+        const cols = row.split(',');
+        return {
+          title: cols[1]?.trim(),
+          start: cols[2]?.trim() + 'T' + (cols[3]?.trim() || '09:00'),
+          url: cols[4]?.trim(),
+          allDay: false,
+        };
+      }).filter(e => e.start);
+
+      return events;
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      const calendarEl = document.getElementById('calendar');
+      const events = await fetchSheetData();
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events,
+        eventClick(info) {
+          if (info.event.url) {
+            window.open(info.event.url, '_blank');
+            info.jsEvent.preventDefault();
+          }
+        },
+      });
+
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
