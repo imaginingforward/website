@@ -1,59 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Imagining Forward NYC Events</title>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; background: #fafafa; }
-    #calendar { max-width: 900px; margin: auto; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-  </style>
+    <meta charset="UTF-8" />
+    <title>Imagining Forward NYC Events</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        #calendar {
+            max-width: 90%;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            #calendar {
+                width: 100%;
+                padding: 10px;
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1 style="text-align: center;">Imagining Forward: NYC Tech Events</h1>
-  <div id="calendar"></div>
+    <h1 style="text-align: center;">Imagining Forward: NYC Tech Events</h1>
+    <div id="calendar"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'month',
+                events: 'https://script.google.com/macros/s/AKfycbwKPO6RTby9DGxWKf0wh2Rqm8fd0iqakrNHeki_Spvt5FxtUISM1EG7YrAhCABss7AZSg/exec',
+                eventColor: '#007bff',
+                eventBorderColor: '#007bff',
+                eventTextColor: '#fff',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                responsive: true,
+                eventContent: function(arg) {
+                  let eventContent = document.createElement('div');
+                  eventContent.innerHTML = `<div style="font-weight: bold; font-size: 14px;">${arg.event.title}</div>`;
 
-  <script>
-    async function fetchEvents() {
-      const url = "https://script.google.com/macros/s/AKfycbwKPO6RTby9DGxWKf0wh2Rqm8fd0iqakrNHeki_Spvt5FxtUISM1EG7YrAhCABss7AZSg/exec"; // Replace with your own web app URL if different
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
+                  let timeStart = arg.event.start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                  let timeEnd = arg.event.end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                  eventContent.innerHTML += `<div style="font-size: 12px;">${timeStart} - ${timeEnd}</div>`;
 
-        return data.map(event => ({
-          title: event.title,
-          start: event.start,
-          end: event.end,
-          description: event.description || '',
-          location: event.location || '',
-          allDay: false
-        }));
-      } catch (error) {
-        console.error("Failed to fetch events:", error);
-        return [];
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', async function () {
-      const calendarEl = document.getElementById('calendar');
-      const events = await fetchEvents();
-
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: events,
-        eventClick: function(info) {
-          alert(
-            `${info.event.title}\n\n` +
-            `📍 Location: ${info.event.extendedProps.location}\n` +
-            `📝 Description: ${info.event.extendedProps.description || 'None'}`
-          );
-          info.jsEvent.preventDefault(); // Prevent default browser navigation
-        }
-      });
-
-      calendar.render();
-    });
-  </script>
+                   if (arg.event.url) {
+                      eventContent.innerHTML += `<div style="font-size: 12px;"><a href="${arg.event.url}" target="_blank">More Info</a></div>`;
+                   }
+                  return { domNodes: [eventContent] }
+                },
+                eventClick: function(info) {
+                  if (info.event.url) {
+                    window.open(info.event.url, '_blank');
+                    info.jsEvent.preventDefault();
+                  }
+                },
+            });
+            calendar.render();
+        });
+    </script>
 </body>
 </html>
